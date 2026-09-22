@@ -1,0 +1,27 @@
+# Android Publisher docker-compose 示例
+# 使用：docker compose up -d
+# 说明：首次部署前请把应用配置放入 ./config（参见 examples/app.demo.json）
+services:
+  android-publisher:
+    build:
+      context: .
+      # 国内网络可覆盖基础镜像：
+      # args:
+      #   BASE_IMAGE: docker.m.daocloud.io/library/node:20-bookworm-slim
+    image: android-publisher:latest
+    container_name: android-publisher
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      CHANNEL_HTTP_DEBUG: "false"
+      CHANNEL_LOG_RETENTION_DAYS: "30"
+      # 渠道审核状态通知（支持飞书/钉钉/企业微信机器人及通用 JSON）
+      # WEBHOOK_URL: "https://open.feishu.cn/open-apis/bot/v2/hook/xxxx"
+    volumes:
+      - ./data:/app/data
+      - ./config:/app/config:ro
+      # 构建功能（可选）：把 Android 项目与 SDK 挂进容器，并在应用配置的 build.projectRoot 中填 /app/project
+      # - /path/to/your/android/project:/app/project
+      # - /path/to/Android/Sdk:/root/Android/Sdk:ro
+      # - ./.docker-cache/gradle:/root/.gradle

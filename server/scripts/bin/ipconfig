@@ -1,0 +1,23 @@
+#!/bin/sh
+if [ "$1" = "getifaddr" ]; then
+  if [ -n "$HOST_LAN_IP" ]; then
+    printf '%s\n' "$HOST_LAN_IP"
+    exit 0
+  fi
+
+  if command -v ip >/dev/null 2>&1; then
+    iface=$2
+    if [ -n "$iface" ] && ip -4 addr show dev "$iface" >/dev/null 2>&1; then
+      ip -4 addr show dev "$iface" | awk '/inet / {sub(/\/.*/, "", $2); print $2; exit}'
+      exit 0
+    fi
+
+    ip -4 route get 1.1.1.1 2>/dev/null | awk '{for (i = 1; i <= NF; i++) if ($i == "src") { print $(i + 1); exit }}'
+    exit 0
+  fi
+
+  exit 0
+fi
+
+echo "ipconfig shim only supports: ipconfig getifaddr <iface>" >&2
+exit 1

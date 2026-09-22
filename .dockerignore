@@ -1,0 +1,10 @@
+**/node_modules
+**/dist
+data/
+config/
+.git
+.github
+.docker-cache
+*.log
+*.tmp
+.DS_Store

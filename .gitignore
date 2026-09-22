@@ -1,0 +1,22 @@
+# Node 依赖
+node_modules/
+
+# 前端构建产物
+web/dist/
+
+# 运行数据（APK 归档、构建/渠道任务、日志），运行时生成
+/data/
+/server/data/
+
+# 本地应用配置（包含各商店密钥，严禁提交）
+/config/
+
+# 环境与日志
+.env
+*.log
+*.tmp
+
+# 系统与工具
+.DS_Store
+.docker-cache/
+.vscode/

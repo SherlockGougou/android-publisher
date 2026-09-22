@@ -1,0 +1,72 @@
+{
+  "applicationId": "com.example.demo",
+  "name": "示例应用",
+  "enableChannel": true,
+  "build": {
+    "projectRoot": "/app/project",
+    "script": "/app/project/build.sh"
+  },
+  "extension": {
+    "updateDesc": "修复若干问题，优化使用体验",
+    "apkDir": "",
+    "webhookUrl": ""
+  },
+  "channels": [
+    {
+      "name": "华为",
+      "enable": false,
+      "params": [
+        { "name": "client_id", "value": "" },
+        { "name": "client_secret", "value": "" },
+        { "name": "fileNameIdentify", "value": "huawei" }
+      ]
+    },
+    {
+      "name": "小米",
+      "enable": false,
+      "params": [
+        { "name": "account", "value": "" },
+        { "name": "publicKey", "value": "" },
+        { "name": "privateKey", "value": "" },
+        { "name": "fileNameIdentify", "value": "xiaomi" }
+      ]
+    },
+    {
+      "name": "OPPO",
+      "enable": false,
+      "params": [
+        { "name": "client_id", "value": "" },
+        { "name": "client_secret", "value": "" },
+        { "name": "fileNameIdentify", "value": "oppo" }
+      ]
+    },
+    {
+      "name": "VIVO",
+      "enable": false,
+      "params": [
+        { "name": "access_key", "value": "" },
+        { "name": "access_secret", "value": "" },
+        { "name": "fileNameIdentify", "value": "vivo" }
+      ]
+    },
+    {
+      "name": "荣耀",
+      "enable": false,
+      "params": [
+        { "name": "client_id", "value": "" },
+        { "name": "client_secret", "value": "" },
+        { "name": "fileNameIdentify", "value": "honor" }
+      ]
+    },
+    {
+      "name": "腾讯应用宝",
+      "enable": false,
+      "params": [
+        { "name": "user_id", "value": "" },
+        { "name": "access_secret", "value": "" },
+        { "name": "app_id", "value": "" },
+        { "name": "fileNameIdentify", "value": "tencent" }
+      ]
+    }
+  ]
+}

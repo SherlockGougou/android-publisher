@@ -1,0 +1,14 @@
+{
+  "name": "android-publisher",
+  "version": "0.1.0",
+  "license": "Apache-2.0",
+  "private": true,
+  "scripts": {
+    "install:all": "npm --prefix server install && npm --prefix web install",
+    "dev:server": "cd server && node index.js",
+    "dev:web": "cd web && npm run dev",
+    "build:web": "cd web && npm run build",
+    "docker:build": "docker build -t android-publisher:latest .",
+    "docker:run": "bash docker_run.sh"
+  }
+}

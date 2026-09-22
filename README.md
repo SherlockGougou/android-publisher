@@ -34,6 +34,9 @@ bash docker_run.sh
 # 3) 打开 http://localhost:3000
 ```
 
+> 国内网络构建缓慢时，可切换基础镜像与 npm 源：
+> `BASE_IMAGE=docker.m.daocloud.io/library/node:20-bookworm-slim NPM_REGISTRY=https://registry.npmmirror.com bash docker_run.sh`
+
 上传一次 APK 试试：**分发中心 → 选择版本 → 上传**（或配置好构建后再走「打包管理」）。
 
 ## 应用配置

@@ -17,6 +17,9 @@ SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
 DOCKER_IMAGE=${DOCKER_IMAGE:-android-publisher:latest}
 CONTAINER_NAME=${CONTAINER_NAME:-android-publisher}
 HOST_PORT=${HOST_PORT:-3000}
+# 构建镜像参数（国内网络建议：NPM_REGISTRY=https://registry.npmmirror.com）
+NPM_REGISTRY=${NPM_REGISTRY:-}
+BASE_IMAGE=${BASE_IMAGE:-}
 DATA_DIR=${DATA_DIR:-$SCRIPT_DIR/data}
 CONFIG_DIR=${CONFIG_DIR:-$SCRIPT_DIR/config}
 BUILD_PROJECT_DIR=${BUILD_PROJECT_DIR:-}
@@ -35,7 +38,10 @@ if [ ! -d "$CONFIG_DIR" ] || [ -z "$(ls -A "$CONFIG_DIR" 2>/dev/null)" ]; then
 fi
 
 echo ">>> 构建镜像 $DOCKER_IMAGE ..."
-docker build -t "$DOCKER_IMAGE" "$SCRIPT_DIR"
+BUILD_ARGS=()
+[ -n "$NPM_REGISTRY" ] && BUILD_ARGS+=(--build-arg "NPM_REGISTRY=$NPM_REGISTRY")
+[ -n "$BASE_IMAGE" ] && BUILD_ARGS+=(--build-arg "BASE_IMAGE=$BASE_IMAGE")
+docker build "${BUILD_ARGS[@]}" -t "$DOCKER_IMAGE" "$SCRIPT_DIR"
 
 # ==================== 清理旧容器 ====================
 if [ -n "$(docker ps -aq -f name="^${CONTAINER_NAME}$")" ]; then

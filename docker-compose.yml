@@ -5,9 +5,10 @@ services:
   android-publisher:
     build:
       context: .
-      # 国内网络可覆盖基础镜像：
+      # 国内网络可覆盖基础镜像与 npm 源：
       # args:
       #   BASE_IMAGE: docker.m.daocloud.io/library/node:20-bookworm-slim
+      #   NPM_REGISTRY: https://registry.npmmirror.com
     image: android-publisher:latest
     container_name: android-publisher
     restart: unless-stopped

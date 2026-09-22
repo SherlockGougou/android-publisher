@@ -6,6 +6,9 @@
 ARG BASE_IMAGE=node:20-bookworm-slim
 FROM ${BASE_IMAGE}
 
+# npm 源：国内网络可覆盖为 https://registry.npmmirror.com（也可用 docker_run.sh 的 NPM_REGISTRY 环境变量）
+ARG NPM_REGISTRY=https://registry.npmjs.org/
+
 # Android 构建常用工具链（bash/git/python3 供用户自备的构建脚本使用）
 RUN apt-get update \
     && apt-get install -y --no-install-recommends bash curl git python3 openjdk-17-jdk ca-certificates \
@@ -21,14 +24,14 @@ RUN chmod +x /usr/local/bin/ipconfig \
 # ---- 构建前端 ----
 WORKDIR /app/web
 COPY web/package*.json ./
-RUN npm ci --prefer-offline
+RUN npm ci --registry="$NPM_REGISTRY" --prefer-offline
 COPY web/ ./
 RUN npm run build
 
 # ---- 安装后端依赖 ----
 WORKDIR /app/server
 COPY server/package*.json ./
-RUN npm ci --prefer-offline --omit=dev
+RUN npm ci --registry="$NPM_REGISTRY" --prefer-offline --omit=dev
 COPY server/ ./
 
 # 运行期目录（建议以卷挂载）：

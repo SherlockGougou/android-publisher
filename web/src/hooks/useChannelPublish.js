@@ -272,16 +272,13 @@ export function useChannelPublish() {
     }
   }, [isLoading, selectedApp, queryStatus]);
 
-  // 切换应用时重置自动查询标记与已选文件（O 助手恒为本地上传，我的圈子恒为版本库模式，无需切换状态）
+  // 切换应用时重置自动查询标记与已选文件
   useEffect(() => {
     hasAutoQueried.current = false;
     setQueryResults({});
     setSelectedFile(null);
     setLocalVersion('');
   }, [selectedApp]);
-
-  // 所有应用均支持"本地上传 APK 发布"模式
-  const isLocalUploadApp = Boolean(selectedApp);
 
   const [isNotifying, setIsNotifying] = useState(false);
   const [notifyError, setNotifyError] = useState('');
@@ -330,7 +327,6 @@ export function useChannelPublish() {
     localVersion,
     setLocalVersion,
     submitLocalPublish,
-    isLocalUploadApp,
     isLoading,
     isSubmitting,
     actionError,

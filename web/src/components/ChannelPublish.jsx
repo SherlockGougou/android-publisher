@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import { useChannelPublish } from '../hooks/useChannelPublish';
 import ThemeSwitcher from './ThemeSwitcher';
 import { formatTime, formatRelativeTime } from '../utils';
@@ -146,7 +147,6 @@ export default function ChannelPublish({ theme, onThemeChange }) {
     localVersion,
     setLocalVersion,
     submitLocalPublish,
-    isLocalUploadApp,
     queryStatus,
     isQuerying,
     queryResults,
@@ -157,9 +157,20 @@ export default function ChannelPublish({ theme, onThemeChange }) {
     notifySuccess,
   } = useChannelPublish();
 
+  // 发布来源：'library' 从版本库选择已归档版本；'upload' 直接上传本机 APK
+  const [sourceMode, setSourceMode] = useState('library');
+  const isUploadMode = sourceMode === 'upload';
+
   const isRunning = activeTask?.status === 'running';
   const canSubmit = !isSubmitting && !isRunning && selectedVersion && selectedChannels.size > 0;
   const canSubmitLocal = !isSubmitting && !isRunning && !!selectedFile && selectedChannels.size > 0;
+
+  // 版本库为空（例如全新部署）时，自动切到本地上传模式，避免无版本可选
+  useEffect(() => {
+    if (selectedApp && versions.length === 0) {
+      setSourceMode('upload');
+    }
+  }, [selectedApp, versions.length]);
 
   const previewMap = {};
   for (const p of apkPreview) {
@@ -258,14 +269,36 @@ export default function ChannelPublish({ theme, onThemeChange }) {
           )}
 
           {/* ── 发布配置 + 当前任务 ── */}
-          {(config?.enableChannel !== false || isLocalUploadApp) && (
+          {config && (
           <div className="channel-publish-body" style={{ marginTop: 24 }}>
             {/* 左侧：发布表单 */}
             <section className="channel-form-panel">
               <h3 className="panel-title" style={{ marginBottom: 4 }}>发布配置</h3>
 
-              {/* O 助手仅支持本地上传（无来源切换），我的圈子恒为版本库模式 */}
-              {isLocalUploadApp ? (
+              {/* 发布来源切换：版本库模式 / 本地上传模式 */}
+              <div className="form-field">
+                <span>发布来源</span>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <button
+                    type="button"
+                    className={`action-button compact ${isUploadMode ? 'ghost' : 'primary'}`}
+                    onClick={() => setSourceMode('library')}
+                    disabled={isRunning}
+                  >
+                    从版本库选择
+                  </button>
+                  <button
+                    type="button"
+                    className={`action-button compact ${isUploadMode ? 'primary' : 'ghost'}`}
+                    onClick={() => setSourceMode('upload')}
+                    disabled={isRunning}
+                  >
+                    上传新 APK
+                  </button>
+                </div>
+              </div>
+
+              {isUploadMode ? (
                 <>
                   {/* 本地上传：选择本机 APK 文件 */}
                   <div className="form-field">
@@ -329,7 +362,7 @@ export default function ChannelPublish({ theme, onThemeChange }) {
                 <div className="channel-checkboxes">
                   {(config?.channels || []).map((ch) => {
                     const preview = previewMap[ch.name];
-                    const hasApk = isLocalUploadApp ? true : preview?.apkPath;
+                        const hasApk = isUploadMode ? true : preview?.apkPath;
                     return (
                       <label
                         key={ch.name}
@@ -342,7 +375,7 @@ export default function ChannelPublish({ theme, onThemeChange }) {
                           disabled={isRunning || !ch.enable}
                         />
                         <span className="channel-checkbox-name">{ch.name}</span>
-                        {isLocalUploadApp ? (
+                        {isUploadMode ? (
                           <span className="channel-apk-hint">本地上传</span>
                         ) : preview?.apkName ? (
                           <span className="channel-apk-hint" title={preview.apkPath}>{preview.apkName}</span>
@@ -369,10 +402,10 @@ export default function ChannelPublish({ theme, onThemeChange }) {
               <div className="form-actions">
                 <button
                   className="action-button primary"
-                  onClick={isLocalUploadApp ? submitLocalPublish : submitPublish}
-                  disabled={isLocalUploadApp ? !canSubmitLocal : !canSubmit}
+                  onClick={isUploadMode ? submitLocalPublish : submitPublish}
+                  disabled={isUploadMode ? !canSubmitLocal : !canSubmit}
                 >
-                  {isSubmitting ? '提交中...' : isRunning ? '发布中...' : isLocalUploadApp ? '上传并发布' : '开始发布'}
+                  {isSubmitting ? '提交中...' : isRunning ? '发布中...' : isUploadMode ? '上传并发布' : '开始发布'}
                 </button>
               </div>
             </section>
@@ -406,7 +439,7 @@ export default function ChannelPublish({ theme, onThemeChange }) {
           )}
 
           {/* ── 历史记录 ── */}
-          {(config?.enableChannel !== false || isLocalUploadApp) && history.length > 0 && (
+          {config && history.length > 0 && (
             <section style={{ marginTop: 28 }}>
               <h3 className="panel-title">发布历史</h3>
               <div className="history-list">

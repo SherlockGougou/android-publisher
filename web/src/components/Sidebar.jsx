@@ -65,8 +65,8 @@ export default function Sidebar({ currentView, onViewChange, versions, version, 
             <aside className={clsx('sidebar', { 'sidebar--open': open })}>
                 <div className="sidebar-header">
                     <motion.img
-                        src="/image/logo.png"
-                        alt="品牌标识"
+                        src="/favicon.svg"
+                        alt="Android Publisher"
                         className="brand-mark"
                         whileHover={{ rotate: 360 }}
                         transition={{ duration: 0.6, ease: 'easeInOut' }}

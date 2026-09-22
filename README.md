@@ -1,63 +1,86 @@
 # Android Publisher
 
-自部署的 Android 应用打包与国内应用商店发布平台。
+**一个自己部署的「安卓应用发布小助手」:把 APK 一键发到国内各大应用商店。**
 
-把 APK（在服务器上构建，或直接上传）一键发布到 **华为 / 小米 / OPPO / VIVO / 荣耀 / 腾讯应用宝**，
-自动查询各商店审核状态，并通过 Webhook（飞书 / 钉钉 / 企业微信 / 通用 JSON）推送结果。
+支持:华为、小米、OPPO、VIVO、荣耀、腾讯应用宝。
 
-> 与 [小篆传包（XiaoZhuan）](https://github.com/Xigong93/XiaoZhuan)（桌面版一键上架）互补：
-> 桌面工具适合个人快速传包；Android Publisher 是自部署 Web 平台，适合多应用、多人使用与自动化。
+上传或自动打包 APK → 勾选要发的商店 → 平台自动上传并提交审核 → 一键查看审核结果 → 结果推送到飞书/钉钉/企业微信。
 
-## 功能一览（v0.1）
+不需要写代码。你唯一要动手的是一个配置文件——其实就是照着示例填空。
 
-- **分发中心**：按版本浏览 APK 产物、单个/批量下载、扫码分享（二维码）
-- **打包管理**：选择应用与 Git 分支，触发服务器上的构建脚本；实时日志、任务历史、随时终止
-- **渠道发布**：六家商店上传 / 提交审核 / 状态查询；最多 4 路并发、实时进度推送、渠道日志留档
-- **通知**：一键把各渠道审核状态推送到飞书 / 钉钉 / 企业微信机器人（或任意 HTTP 端点）
-- **多应用**：配置目录中每个 JSON 描述一个应用，互不干扰
-- **任务持久化**：构建与渠道任务元数据落盘，服务重启后历史仍可查看
+---
 
-## 快速开始（Docker）
+## 一、它能帮你做什么
+
+- 📦 **管理安装包**:按版号归档 APK 和 mapping 文件,随时下载、生成二维码分享
+- 🚀 **一键发布**:同一版本勾选多家商店,自动上传、提交审核(最多 4 家同时进行,其余自动排队)
+- 🔍 **盯审核状态**:一键查询六家商店的当前审核结果(审核中 / 已上线 / 被拒绝)
+- 📬 **结果通知**:把审核状态推送到群机器人,不必反复登录各家商店后台
+- 🏗 **自动打包**(可选):服务器直接从 Git 仓库拉代码并打包,产物自动入库
+
+## 二、你需要准备什么
+
+### 必需的
+
+| 项目 | 要求 |
+| --- | --- |
+| 一台电脑或服务器 | Windows / macOS / Linux 都可以。长期使用建议放在一台常开的机器上(云主机、NAS、家里的小主机都行) |
+| Docker | 免费软件。Windows / macOS 装 [Docker Desktop](https://docs.docker.com/get-docker/);Linux 装 docker 与 compose 插件 |
+| 网络 | 能访问 GitHub 下载代码、能拉取 Docker 镜像;国内网络较慢时按第 3 步的「国内加速」处理 |
+| 磁盘与内存 | 空闲磁盘 2GB 以上、内存 2GB 以上 |
+
+装好后,打开命令行(Windows 用 PowerShell / 终端),输入下面两条命令,都能显示版本号就说明准备好了:
 
 ```bash
-git clone <本仓库地址> android-publisher && cd android-publisher
-
-# 1) 准备应用配置（每个应用一份，示例见 examples/app.demo.json）
-mkdir -p config/apps data
-cp examples/app.demo.json config/apps/com.example.demo.json
-# 编辑 com.example.demo.json：applicationId、应用名称、各商店密钥等
-
-# 2) 构建并启动
-bash docker_run.sh
-# 或者：docker compose up -d --build
-
-# 3) 打开 http://localhost:3000
+docker --version
+docker compose version
 ```
 
-> 国内网络构建缓慢时，可切换基础镜像与 npm 源：
-> `BASE_IMAGE=docker.m.daocloud.io/library/node:20-bookworm-slim NPM_REGISTRY=https://registry.npmmirror.com bash docker_run.sh`
+### 发布时才需要的
 
-上传一次 APK 试试：**分发中心 → 选择版本 → 上传**（或配置好构建后再走「打包管理」）。
+- 各家应用商店的开发者账号与 API 密钥(见第 2 步的表;暂时不发布可以先不填)
+- 待发布的 APK 文件
 
-## 应用配置
+### 可选:想「服务器自动打包」才需要
 
-配置目录：`config/apps/<applicationId>.json`（容器内为 `/app/config/apps/`）。
-完整示例见 [`examples/app.demo.json`](examples/app.demo.json)。
+- Android 项目源码(能放到这台机器上的一个文件夹里)
+- Android SDK(命令行工具即可,放在机器的任意位置)
 
-| 字段 | 说明 |
-| --- | --- |
-| `applicationId` | 应用包名，必须与 APK 实际包名一致（本地上传时会用 aapt 校验） |
-| `name` | 展示名称 |
-| `enableChannel` | 是否启用渠道发布 |
-| `build.projectRoot` | 构建项目根目录（容器内路径，如 `/app/project`；相对路径按配置目录解析） |
-| `build.script` | 构建脚本路径（用户自备 sh，契约见下） |
-| `extension.updateDesc` | 发布页默认更新日志 |
-| `extension.webhookUrl` | 该应用的通知 Webhook（也可用环境变量 `WEBHOOK_URL` 统一配置） |
-| `channels[]` | 渠道列表：`name` / `enable` / `params[]` |
+## 三、四步上手
 
-各商店 `params` 参数名：
+### 第 1 步:把程序下载到电脑
 
-| 渠道 | 参数 |
+- **不用命令行**:打开项目页面 → 点绿色 `Code` 按钮 → `Download ZIP` → 解压到一个文件夹
+- **会用 git**:
+
+```bash
+git clone https://github.com/SherlockGougou/android-publisher.git
+cd android-publisher
+```
+
+> 下文所有命令,都假设在这个文件夹里执行。
+
+### 第 2 步:填写应用配置
+
+每个应用对应一个配置文件。先把示例复制一份并改名:
+
+```bash
+mkdir -p config/apps
+cp examples/app.demo.json config/apps/com.yourcompany.app.json
+```
+
+不会命令行的话:在文件管理器里把 `examples/app.demo.json` 复制到 `config/apps/` 文件夹,再把文件名改成你的包名即可。
+
+用记事本或任意文本编辑器打开它,重点填 4 处:
+
+1. `applicationId`:你的应用包名(如 `com.yourcompany.app`),**必须与 APK 真实包名一致**
+2. `name`:展示名称,随便起
+3. `channels` 里各家的密钥(`params`)——不打算发的商店把 `enable` 保持 `false` 就行
+4. `params` 里的 `fileNameIdentify`:决定「哪个 APK 文件发给哪家商店」。例如华为填 `huawei`,那么文件名里带 `huawei` 的 APK 会发给华为
+
+各家商店需要填的参数(在你对应商店的开发者后台申请 API/服务权限后获得):
+
+| 商店 | 参数名 |
 | --- | --- |
 | 华为 | `client_id`、`client_secret` |
 | 小米 | `account`、`publicKey`、`privateKey` |
@@ -66,94 +89,141 @@ bash docker_run.sh
 | 荣耀 | `client_id`、`client_secret` |
 | 腾讯应用宝 | `user_id`、`access_secret`、`app_id` |
 
-每个渠道还有一个 `fileNameIdentify` 参数：平台在产物目录中**按文件名包含关系**为渠道挑选 APK。
-例如 `fileNameIdentify = "huawei"` 时，`xxx-huawei-4.2.0.apk` 会发给华为；不配置则用渠道名（如 `华为`）匹配。
+> 🔐 这些密钥只存在你自己这台机器上,不会被发送到任何地方。但也请**不要把 `config` 文件夹发给别人或传到网上**。
 
-> ⚠️ 配置文件包含各商店密钥：它只存在于你的部署环境（`config/` 已被 `.gitignore` 忽略），
-> 接口返回给前端前会自动脱敏，请勿提交到任何仓库。
+### 第 3 步:启动
 
-## 构建功能（打包管理）
-
-「打包管理」在整个任务流中做三件事：同步 Git 分支 → 执行你的构建脚本 → 扫描产物目录。
-
-**启用方式**：把 Android 项目与 SDK 挂进容器，并在应用配置里填好 `build` 段：
+在这个文件夹里执行一条命令(第一次会现场构建镜像,约 5~10 分钟):
 
 ```bash
-BUILD_PROJECT_DIR=/path/to/your/android/project \
-ANDROID_SDK_DIR=/path/to/Android/Sdk \
-bash docker_run.sh
+docker compose up -d --build
 ```
 
-对应配置：
+> **国内网络慢怎么办?** 用文本编辑器打开 `docker-compose.yml`,找到 `build.args` 下面被注释掉的两行,删掉行首的 `#`,保存,再重新执行上面的命令。这两行会把基础镜像和依赖源换成国内可加速的地址。
+
+查看是否启动成功:
+
+```bash
+docker compose ps
+```
+
+看到状态是 `Up` 就成功了。
+
+### 第 4 步:打开网页
+
+浏览器访问 **http://localhost:3000**。
+
+如果装在另一台机器(比如服务器)上,请换成那台机器的地址,例如 `http://192.168.1.10:3000`。
+
+看到左侧菜单有「分发中心 / 打包管理 / 渠道发布 / Mapping 文件」就说明一切正常。
+
+## 四、完成一次发布
+
+1. **进入「渠道发布」页**,在左上角选择你的应用
+2. **选择发布来源**,有两种方式:
+   - **从版本库选择**(推荐):适合已经归档到平台里的版本;页面上会列出各商店匹配到的 APK 文件
+   - **上传新 APK**:适合随手发一次;点「选择本机 APK 文件」,版本号会自动从文件名解析(比如 `我的应用-4.2.0.apk` → `4.2.0`),也可以手动改
+3. **勾选要发布的商店**(没配置密钥、或没匹配到 APK 的商店会置灰)
+4. 填写**更新说明**,点「开始发布」(上传模式按钮是「上传并发布」)
+5. 右侧「当前任务」会显示每家商店的实时进度(最多 4 家同时进行)
+6. 发布完成后,在下方「渠道状态」区域点「**刷新**」可以查询各商店的审核结果;点「**📬 推送通知**」可以把结果发到群机器人(需先配置,见第六节)
+
+> 想把某个版本放进「版本库」:用「打包管理」构建出来的产物会自动入库;也可以直接把 APK 文件复制到 `data/apks/<版本号>/` 文件夹里。
+
+## 五、可选功能一:让服务器自动打包
+
+前提:这台机器上已经有你的 Android 项目源码和 Android SDK。
+
+**1) 把项目与 SDK 挂进容器**
+
+编辑 `docker-compose.yml`,找到「构建功能(可选)」下面注释掉的两行,删掉行首 `#` 并把路径改成你的实际路径;保存后重新执行:
+
+```bash
+docker compose up -d
+```
+
+**2) 在应用配置里加上 build 两行**
 
 ```json
-"build": { "projectRoot": "/app/project", "script": "/app/project/build.sh" }
+"build": {
+  "projectRoot": "/app/project",
+  "script": "/app/project/build.sh"
+}
 ```
 
-**构建脚本契约**：平台以 `bash <script> <版本号> <更新日志>` 调用脚本，工作目录为 `projectRoot`，并注入环境变量：
+**3) 准备构建脚本**
 
-| 环境变量 | 说明 |
+把 [`examples/build.sh`](examples/build.sh) 复制到你的项目根目录,照着注释改一行 Gradle 命令即可。规则只有两条:
+
+- 平台用 `bash build.sh <版本号> "更新日志"` 调用它
+- 必须把打好的 APK 放进平台给的环境变量 `OUTPUT_DIR` 指向的文件夹里
+
+| 平台注入的环境变量 | 用途 |
 | --- | --- |
-| `OUTPUT_DIR` | **必须使用**：把打好的 APK 放进这个目录（允许子目录），平台递归扫描它 |
-| `PROJECT_ROOT` | 项目根目录（同工作目录） |
+| `OUTPUT_DIR` | **必须使用**:把 APK 放进来(允许放子文件夹) |
+| `PROJECT_ROOT` | 项目根目录 |
 | `APP_VERSION` / `APP_CHANGELOG` | 版本号 / 更新日志 |
-| `ANDROID_SDK_ROOT` / `ANDROID_HOME` | 部署时挂载的 SDK 路径 |
-| `JAVA_HOME` | 镜像内置 OpenJDK 17 |
+| `ANDROID_SDK_ROOT` | 你挂载进去的 Android SDK 路径 |
 
-脚本示例见 [`examples/build.sh`](examples/build.sh)。若项目不是 Git 仓库，平台会自动跳过分支同步，直接执行脚本。
+**4) 在页面操作**
 
-## 通知 Webhook
+「打包管理」→ 选应用 →(是 Git 项目的话)选分支 → 填版本号 →「开始打包」。右侧实时日志,成功后产物自动出现在「分发中心」,可直接去「渠道发布」页选择该版本发布。
 
-渠道发布页的「推送通知」按钮会把各渠道审核状态 POST 到配置的地址。
-地址按特征自动适配：飞书 / 钉钉 / 企业微信机器人开箱即用，其它地址发送通用 JSON：
+## 六、可选功能二:通知到群机器人
 
-```json
-{ "title": "渠道审核状态汇报（应用名）", "text": "华为：🔄 审核中 (4.2.0)…", "source": "android-publisher", "sentAt": "..." }
+1. 在飞书 / 钉钉 / 企业微信群里添加一个「自定义机器人」,复制它的 Webhook 地址
+2. 编辑 `docker-compose.yml`,找到 `WEBHOOK_URL` 那一行,删掉 `#`,把地址粘贴进去,保存
+3. 重新执行 `docker compose up -d`,然后到「渠道发布」页点「📬 推送通知」
+
+收到的消息形如:
+
+```
+📊 渠道审核状态汇报（应用名）
+
+华为：🔄 审核中 (4.2.0)
+小米：✅ 已上线 (4.2.0)
+VIVO：❌ 被拒绝 (4.2.0)
 ```
 
-## 环境变量
+## 七、常见问题
 
-| 变量 | 默认值 | 说明 |
-| --- | --- | --- |
-| `PORT` | `3000` | 服务端口 |
-| `BUILD_DATA_ROOT` | `server/data`（容器 `/app/data`） | 数据根目录（APK 归档、任务、日志） |
-| `APK_ROOT` | `<数据根>/apks` | APK 归档目录 |
-| `CONFIG_DIR` | `config/apps`（容器 `/app/config/apps`） | 应用配置目录；也兼容单文件模式 `CHANNEL_CONFIG_PATH` |
-| `WEBHOOK_URL` | 空 | 通知地址（兼容旧名 `FEISHU_WEBHOOK`） |
-| `CHANNEL_HTTP_DEBUG` | `false` | 记录渠道 HTTP 请求/响应明细日志（自动脱敏） |
-| `CHANNEL_LOG_RETENTION_DAYS` | `30` | 日志保留天数 |
-| `CHANNEL_LOG_MAX_SIZE` | `52428800` | 单日志文件上限（字节），超限滚动 |
-| `BUILD_DEFAULT_BRANCH` | `main` | 构建页默认分支 |
-| `BUILD_PROJECT_ROOT` / `BUILD_RELEASE_RUNNER` | 空 | 单应用部署的兜底构建配置（优先级低于应用配置 `build` 段） |
+**Q:浏览器打不开页面?**
+先确认服务在运行:`docker compose ps` 应显示 `Up`;再确认地址端口(默认 `3000`);如果装在另一台机器上,检查那台机器的防火墙是否放行了 3000 端口。
 
-## 安全说明 ⚠️
+**Q:3000 端口被其他程序占用了?**
+编辑 `docker-compose.yml`,把 `"3000:3000"` 改成 `"8080:3000"`,重新 `docker compose up -d` 后用 `http://localhost:8080` 访问。
 
-当前版本**不内置登录与权限**：任何能访问服务端口的人都可以操作渠道发布（即动用你商店开发者账号的密钥）。
-请务必只部署在**内网或受信任网络**；如需公网访问，请置于带鉴权的反向代理之后并启用 HTTPS。
+**Q:构建镜像特别慢、像卡住了?**
+国内网络问题,按第 3 步的「国内网络慢怎么办」处理。
 
-## 当前不做（v0.1 边界）
+**Q:上传 APK 后提示「包名不一致」?**
+APK 的真实包名与配置里的 `applicationId` 不一致,改成一致的即可(手机上可用「应用信息」类工具查看包名)。
 
-蒲公英（PGYER）上传、应用商店「首次创建应用 / 上传素材」流程、用户体系与权限、多语言界面。
+**Q:某家商店发布失败了,怎么查原因?**
+「渠道发布」页对应商店的卡片上会显示失败原因;详细日志在 `data/logs/` 文件夹里。
 
-## 本地开发
+**Q:我的密钥安全吗?数据存在哪?**
+所有配置和数据都只在你本机:`config/`(配置与密钥)与 `data/`(APK、任务、日志)。备份 = 复制这两个文件夹。
 
-```bash
-# 依赖
-npm --prefix server install
-npm --prefix web install
+**Q:怎么升级到新版本?**
+用新代码覆盖旧文件(保留 `config/` 与 `data/` 不动),重新执行 `docker compose up -d --build` 即可。
 
-# 后端（:3000）+ 前端热更新（:5173，代理 /api 与 /download 到 3000）
-npm run dev:server
-npm run dev:web
-```
+**Q:我只想发一部分商店,可以吗?**
+可以。把不发的那几家 `enable` 保持 `false`(示例默认就是全部 `false`)。
 
-自检方式（项目暂无自动化测试与 lint）：`node --check`（server 全部 JS）与 `npm --prefix web run build`；
-接口自测：`curl localhost:3000/api/apps`。
+## 八、安全提醒(请务必阅读)
 
-架构与开发约定见 [`PROJECT.md`](PROJECT.md)。
+这个工具**目前没有登录密码**:任何能访问 `http://你的地址:3000` 的人,都能操作发布(相当于能使用你的商店密钥)。
+请只在**内网 / 办公室 / 家里**使用;如果要放到公网,务必先请懂技术的朋友加一层带密码的反向代理。
 
-## 许可证
+## 九、想了解更深入的内容
+
+- 开发与架构、完整环境变量表、自检清单 → [`PROJECT.md`](PROJECT.md)
+- 应用配置的全部字段 → [`examples/app.demo.json`](examples/app.demo.json)
+- 构建脚本参考 → [`examples/build.sh`](examples/build.sh)
+
+## 十、许可证
 
 [Apache-2.0](LICENSE) © 2026 SherlockGougou
 
-渠道发布能力与 [小篆传包（XiaoZhuan）](https://github.com/Xigong93/XiaoZhuan) 同源（同为 Apache-2.0），二者共享国内商店接入经验。
+与小篆传包 [XiaoZhuan](https://github.com/Xigong93/XiaoZhuan) 同协议、互为姊妹项目:桌面版适合个人一键传包,本平台适合多应用、多人使用与自动化。

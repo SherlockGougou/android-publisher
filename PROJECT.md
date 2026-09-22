@@ -38,6 +38,32 @@ npm --prefix web run build      # 前端生产构建
 bash docker_run.sh              # 构建镜像并启动容器
 ```
 
+## 环境变量（完整）
+
+运行时（全部可选，均有默认值）：
+
+| 变量 | 默认值 | 说明 |
+| --- | --- | --- |
+| `PORT` | `3000` | 服务端口 |
+| `BUILD_DATA_ROOT` | `server/data`（容器 `/app/data`） | 数据根目录（APK、任务、日志） |
+| `APK_ROOT` | `<数据根>/apks` | APK 归档目录 |
+| `CONFIG_DIR` | `config/apps`（容器 `/app/config/apps`） | 应用配置目录；也支持 `CHANNEL_CONFIG_PATH` 单文件模式 |
+| `CHANNEL_UPLOAD_DIR` | `<数据根>/channel-uploads` | 本地上传 APK 的留档目录 |
+| `CHANNEL_LOG_DIR` | `<数据根>/logs` | 渠道/构建日志目录 |
+| `CHANNEL_LOG_RETENTION_DAYS` | `30` | 日志保留天数 |
+| `CHANNEL_LOG_MAX_SIZE` | `52428800` | 单日志文件上限（字节），超限滚动 |
+| `CHANNEL_HTTP_DEBUG` | `false` | 记录渠道 HTTP 明细（自动脱敏） |
+| `WEBHOOK_URL` | 空 | 通知地址（兼容旧名 `FEISHU_WEBHOOK`） |
+| `BUILD_DEFAULT_BRANCH` | `main` | 构建页默认分支 |
+| `BUILD_PROJECT_ROOT` / `BUILD_RELEASE_RUNNER` | 空 | 单应用兜底构建配置（优先级低于应用配置 `build` 段） |
+
+构建期（Docker build args）：
+
+| 参数 | 默认值 | 说明 |
+| --- | --- | --- |
+| `BASE_IMAGE` | `node:20-bookworm-slim` | 基础镜像（国内可换 `docker.m.daocloud.io/library/node:20-bookworm-slim`） |
+| `NPM_REGISTRY` | `https://registry.npmjs.org/` | npm 源（国内可换 `https://registry.npmmirror.com`） |
+
 ## 编码约定
 
 - 全部 ESM（`"type": "module"`）；注释与用户可见文案用中文

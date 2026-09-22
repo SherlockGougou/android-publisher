@@ -1,6 +1,6 @@
 # Android Publisher docker-compose 示例
 # 使用：docker compose up -d
-# 说明：首次部署前请把应用配置放入 ./config（参见 examples/app.demo.json）
+# 说明：首次部署前把应用配置放到 ./config/apps/（参见 examples/app.demo.json）
 services:
   android-publisher:
     build:

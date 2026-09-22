@@ -33,11 +33,11 @@ COPY server/ ./
 
 # 运行期目录（建议以卷挂载）：
 #   /app/data   → APK 归档、构建/渠道任务数据、日志
-#   /app/config → 应用配置目录（每个 <applicationId>.json 描述一个应用）
+#   /app/config → 配置目录，其下 apps/ 放应用 JSON（每个 <applicationId>.json 描述一个应用）
 ENV PORT=3000 \
     BUILD_DATA_ROOT=/app/data \
     APK_ROOT=/app/data/apks \
-    CONFIG_DIR=/app/config \
+    CONFIG_DIR=/app/config/apps \
     JAVA_HOME=/opt/java-17 \
     ANDROID_HOME=/root/Android/Sdk \
     ANDROID_SDK_ROOT=/root/Android/Sdk

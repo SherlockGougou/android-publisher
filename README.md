@@ -115,7 +115,7 @@ bash docker_run.sh
 | `PORT` | `3000` | 服务端口 |
 | `BUILD_DATA_ROOT` | `server/data`（容器 `/app/data`） | 数据根目录（APK 归档、任务、日志） |
 | `APK_ROOT` | `<数据根>/apks` | APK 归档目录 |
-| `CONFIG_DIR` | `config/apps`（容器 `/app/config`） | 应用配置目录；也兼容单文件模式 `CHANNEL_CONFIG_PATH` |
+| `CONFIG_DIR` | `config/apps`（容器 `/app/config/apps`） | 应用配置目录；也兼容单文件模式 `CHANNEL_CONFIG_PATH` |
 | `WEBHOOK_URL` | 空 | 通知地址（兼容旧名 `FEISHU_WEBHOOK`） |
 | `CHANNEL_HTTP_DEBUG` | `false` | 记录渠道 HTTP 请求/响应明细日志（自动脱敏） |
 | `CHANNEL_LOG_RETENTION_DAYS` | `30` | 日志保留天数 |

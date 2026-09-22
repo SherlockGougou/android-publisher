@@ -18,7 +18,7 @@ web (React/Vite) → REST API (server/index.js) → 任务管理器 → 构建�
   - `channels/utils/` — token 缓存、重试、HTTP 脱敏日志、按天滚动文件日志
 - `web/` — React 18 + Vite + Framer Motion；四个视图：分发中心 / 打包管理 / 渠道发布 / Mapping 文件
 - `data/` — 运行数据（APK 归档、任务、日志），运行时生成，不入库
-- `config/` — 应用配置目录（`<applicationId>.json`），含商店密钥，不入库
+- `config/apps/` — 应用配置目录（`<applicationId>.json`），含商店密钥，不入库
 
 ## 目录与数据契约（勿随意更改）
 

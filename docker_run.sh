@@ -2,8 +2,8 @@
 # 构建并启动 Android Publisher 容器；所有配置均可用同名环境变量覆盖。
 #
 # 目录约定（相对仓库根目录）：
-#   data/   → /app/data    运行数据（APK 归档、任务、日志）
-#   config/ → /app/config  应用配置目录（每个 <applicationId>.json 一个应用）
+#   data/   → /app/data          运行数据（APK 归档、任务、日志）
+#   config/ → /app/config        配置目录，其下 apps/ 放应用 JSON（<applicationId>.json）
 #
 # 可选挂载（构建功能）：
 #   BUILD_PROJECT_DIR  Android 项目路径            → /app/project
@@ -31,7 +31,7 @@ CHANNEL_LOG_MAX_SIZE=${CHANNEL_LOG_MAX_SIZE:-52428800}
 mkdir -p "$DATA_DIR" "$CONFIG_DIR"
 
 if [ ! -d "$CONFIG_DIR" ] || [ -z "$(ls -A "$CONFIG_DIR" 2>/dev/null)" ]; then
-  echo ">>> [warn] 配置目录为空：$CONFIG_DIR（应用配置目录，建议先放入 <applicationId>.json，可参考 examples/app.demo.json）"
+  echo ">>> [warn] 配置目录为空：$CONFIG_DIR（请把应用 JSON 放到 $CONFIG_DIR/apps/，可参考 examples/app.demo.json）"
 fi
 
 echo ">>> 构建镜像 $DOCKER_IMAGE ..."
